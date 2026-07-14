@@ -120,7 +120,7 @@ export default function ContractsPage() {
                         <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_MID }}>{f.label}</label>
                         {f.type === 'select' ? (
                           <select className="w-full px-3 py-2 rounded border text-sm outline-none" style={{ borderColor: BORDER, backgroundColor: BG, color: TEXT }}>
-                            {f.options!.map((o) => <option key={o}>{o}</option>)}
+                            {(f as { options?: string[] }).options?.map((o) => <option key={o}>{o}</option>)}
                           </select>
                         ) : (
                           <input type={f.type ?? 'text'} placeholder={f.placeholder} className="w-full px-3 py-2 rounded border text-sm outline-none" style={{ borderColor: BORDER, backgroundColor: BG, color: TEXT }} />
