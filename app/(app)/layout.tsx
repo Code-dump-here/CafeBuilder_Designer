@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 const navSections = [
   {
@@ -31,6 +31,13 @@ const navSections = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  function handleLogout() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('accountId')
+    router.push('/sign-in')
+  }
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f5ede6' }}>
@@ -41,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="w-7 h-7 rounded-full bg-[#1c1008] flex items-center justify-center">
             <span className="text-white text-xs font-bold">D</span>
           </div>
-          <span className="font-semibold text-sm" style={{ color: '#1c1008' }}>Designer</span>
+          <Link href="/my-projects" className="font-semibold text-sm hover:underline" style={{ color: '#1c1008' }}>Designer</Link>
         </div>
 
         {/* Nav */}
@@ -82,6 +89,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <button
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
             style={{ color: '#a89888' }}
+            onClick={handleLogout}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
