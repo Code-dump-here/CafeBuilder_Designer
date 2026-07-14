@@ -1,3 +1,13 @@
+// TODO: Wire to BE once a project-brief endpoint exists for providers.
+// All sections below are mock data — replace with real API data when available.
+// Fields needed from BE:
+//   Project Details: projectName, location, totalArea, budget, timeline
+//   Brand & Concept: brandWords, designStyle, mood, targetCustomer
+//   Space Requirements: cafeType, seatingCount, functionalAreas
+//   Site Survey: floor, dimensions, storefrontWidth, naturalLight, ventilation, notes
+//   Business Goals: primaryGoal, differentiators
+
+/*
 const sections = [
   {
     title: 'Project Details',
@@ -45,6 +55,7 @@ const sections = [
     ],
   },
 ]
+*/
 
 export default function BriefFullPage() {
   return (
@@ -65,22 +76,12 @@ export default function BriefFullPage() {
         </button>
       </header>
 
-      <div className="flex flex-col gap-6">
-        {sections.map((section) => (
-          <div key={section.title} className="rounded-xl border overflow-hidden" style={{ borderColor: '#e8ddd6' }}>
-            <div className="px-6 py-3" style={{ backgroundColor: '#f5ede6' }}>
-              <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#a89888' }}>{section.title}</h2>
-            </div>
-            <div className="divide-y" style={{ borderColor: '#f0e8e0' }}>
-              {section.items.map((item) => (
-                <div key={item.label} className="flex gap-4 px-6 py-4 bg-white">
-                  <span className="text-sm font-medium w-40 flex-shrink-0" style={{ color: '#a89888' }}>{item.label}</span>
-                  <span className="text-sm" style={{ color: '#1c1008' }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      <div className="flex flex-col items-center justify-center py-20 rounded-xl border" style={{ borderColor: '#d4c8be', backgroundColor: '#fdfbfa' }}>
+        <div className="text-4xl mb-3">📄</div>
+        <p className="font-medium mb-1" style={{ color: '#1c1008' }}>Full brief coming soon</p>
+        <p className="text-sm text-center max-w-xs" style={{ color: '#7a6a5a' }}>
+          Waiting for the project brief endpoint to be available on the BE.
+        </p>
       </div>
     </div>
   )

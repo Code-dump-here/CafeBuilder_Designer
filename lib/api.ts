@@ -81,6 +81,35 @@ export const projectProviders = {
     request<ProjectProviderResponse>(`/project-providers/${id}/reject`, { method: 'POST' }),
 }
 
+// ── Project Posts (public listings providers can apply to) ───────────────────
+
+export interface ProjectPostResponse {
+  id: number
+  title: string
+  description: string | null
+  location: string | null
+  area: number | null
+  budget: string | null
+  style: string | null
+  deadline: string | null
+  proposalCount: number | null
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export const projectPosts = {
+  list: (params: { status?: string; pageSize?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.status) q.set('status', params.status)
+    q.set('pageSize', String(params.pageSize ?? 50))
+    return request<Paginated<ProjectPostResponse>>(`/project-posts?${q}`)
+  },
+
+  get: (id: number) =>
+    request<ProjectPostResponse>(`/project-posts/${id}`),
+}
+
 // ── Designs ──────────────────────────────────────────────────────────────────
 
 export type DesignType = 'concept' | 'layout_2d' | 'render_3d' | 'technical_drawing'
