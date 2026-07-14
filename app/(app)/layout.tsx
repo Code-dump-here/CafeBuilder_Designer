@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { Suspense } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const navSections = [
   {
@@ -29,6 +30,52 @@ const navSections = [
   },
 ]
 
+// Carries projectId / projectProviderId from the current URL onto sidebar links
+// so switching pages keeps the selected project context.
+function SidebarNav({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams()
+  const q = new URLSearchParams()
+  const projectId = searchParams.get('projectId')
+  const projectProviderId = searchParams.get('projectProviderId')
+  if (projectId) q.set('projectId', projectId)
+  if (projectProviderId) q.set('projectProviderId', projectProviderId)
+  const suffix = q.toString() ? `?${q}` : ''
+
+  return (
+    <nav className="flex-1 px-4 pb-4 flex flex-col gap-6">
+      {navSections.map((section) => (
+        <div key={section.label}>
+          <p
+            className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2"
+            style={{ color: '#a89888' }}
+          >
+            {section.label}
+          </p>
+          <ul className="flex flex-col gap-0.5">
+            {section.items.map((item) => {
+              const active = pathname === item.href
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={`${item.href}${suffix}`}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      backgroundColor: active ? '#1c1008' : 'transparent',
+                      color: active ? '#fff' : '#5c4a38',
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  )
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -52,37 +99,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-4 pb-4 flex flex-col gap-6">
-          {navSections.map((section) => (
-            <div key={section.label}>
-              <p
-                className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2"
-                style={{ color: '#a89888' }}
-              >
-                {section.label}
-              </p>
-              <ul className="flex flex-col gap-0.5">
-                {section.items.map((item) => {
-                  const active = pathname === item.href
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                        style={{
-                          backgroundColor: active ? '#1c1008' : 'transparent',
-                          color: active ? '#fff' : '#5c4a38',
-                        }}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
-        </nav>
+        <Suspense>
+          <SidebarNav pathname={pathname} />
+        </Suspense>
 
         {/* Bottom action */}
         <div className="px-4 pb-6">

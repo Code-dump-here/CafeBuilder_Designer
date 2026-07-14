@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { engagementOverview, projects, designBriefs, type ProjectResponse, type DesignBriefResponse, type EngagementOverviewResponse } from '@/lib/api'
 
 // TODO (mock data — will be used when BE returns these fields):
@@ -48,6 +48,7 @@ export default function OverviewPage() {
 }
 
 function OverviewInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const paramProjectId = searchParams.get('projectId')
   const paramProviderId = searchParams.get('projectProviderId')
@@ -103,7 +104,16 @@ function OverviewInner() {
         {ACTION_BUTTONS.map((btn) => (
           <button
             key={btn}
-            onClick={() => setActiveAction(btn)}
+            onClick={() => {
+              setActiveAction(btn)
+              const q = new URLSearchParams()
+              if (projectId) q.set('projectId', String(projectId))
+              if (projectProviderId) q.set('projectProviderId', String(projectProviderId))
+              const suffix = q.toString() ? `?${q}` : ''
+              if (btn === 'Brief') router.push(`/brief/full${suffix}`)
+              else if (btn === 'Design Scope') router.push(`/design-management${suffix}`)
+              else if (btn === 'Progress') router.push(`/concept${suffix}`)
+            }}
             className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
             style={{
               borderColor: activeAction === btn ? 'transparent' : '#d4c8be',
