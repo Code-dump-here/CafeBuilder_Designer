@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   designs,
@@ -32,6 +32,14 @@ const TYPE_LABEL: Record<string, string> = {
 }
 
 export default function DesignManagementPage() {
+  return (
+    <Suspense>
+      <DesignManagementInner />
+    </Suspense>
+  )
+}
+
+function DesignManagementInner() {
   const searchParams = useSearchParams()
   const paramId = searchParams.get('projectProviderId')
   const projectProviderId = paramId ? Number(paramId) : getProjectProviderId()

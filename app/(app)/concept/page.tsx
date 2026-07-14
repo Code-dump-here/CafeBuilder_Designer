@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { designs, type DesignResponse, type DesignStatus } from '@/lib/api'
 
@@ -24,6 +24,14 @@ const STATUS_MAP: Record<DesignStatus, { label: string; bg: string; color: strin
 }
 
 export default function ConceptPage() {
+  return (
+    <Suspense>
+      <ConceptInner />
+    </Suspense>
+  )
+}
+
+function ConceptInner() {
   const searchParams = useSearchParams()
   const paramId = searchParams.get('projectProviderId')
   const projectProviderId = paramId ? Number(paramId) : getProjectProviderId()

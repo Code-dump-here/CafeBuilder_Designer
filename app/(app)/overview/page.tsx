@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { engagementOverview, projects, designBriefs, type ProjectResponse, type DesignBriefResponse, type EngagementOverviewResponse } from '@/lib/api'
 
@@ -40,6 +40,14 @@ function Section({ title, children, badge }: { title: string; children: React.Re
 }
 
 export default function OverviewPage() {
+  return (
+    <Suspense>
+      <OverviewInner />
+    </Suspense>
+  )
+}
+
+function OverviewInner() {
   const searchParams = useSearchParams()
   const paramProjectId = searchParams.get('projectId')
   const paramProviderId = searchParams.get('projectProviderId')

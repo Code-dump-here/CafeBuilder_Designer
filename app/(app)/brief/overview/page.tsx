@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { projects, designBriefs, type ProjectResponse, type DesignBriefResponse } from '@/lib/api'
 
@@ -15,6 +15,14 @@ import { projects, designBriefs, type ProjectResponse, type DesignBriefResponse 
 // Site Summary: { Location, Dimensions, Ceiling, Light } — dimensions/ceiling/light not in BE yet
 
 export default function BriefOverviewPage() {
+  return (
+    <Suspense>
+      <BriefOverviewInner />
+    </Suspense>
+  )
+}
+
+function BriefOverviewInner() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('projectId') ? Number(searchParams.get('projectId')) : null
 
