@@ -23,6 +23,21 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json()
 }
 
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+interface AuthResponse {
+  accessToken: string
+  accountId: number
+}
+
+export const auth = {
+  login: (body: { email: string; password: string }) =>
+    request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+
+  register: (body: { fullName: string; email: string; phoneNumber?: string; password: string }) =>
+    request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface ProjectProviderResponse {

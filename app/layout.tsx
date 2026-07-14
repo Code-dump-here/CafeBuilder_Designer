@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
+import DevNavButton from "./DevNavButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,30 +30,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-        {/* Dev nav floating button — always visible */}
-        <Link
-          href="/dev-nav"
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            zIndex: 9999,
-            backgroundColor: '#1c1008',
-            color: '#fff',
-            borderRadius: '9999px',
-            padding: '10px 16px',
-            fontSize: '12px',
-            fontWeight: 700,
-            textDecoration: 'none',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            letterSpacing: '0.02em',
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>⚡</span> Pages
-        </Link>
+        <DevNavButton />
       </body>
     </html>
   );
