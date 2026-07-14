@@ -228,6 +228,14 @@ export interface DesignImage {
   createdAt: string
 }
 
+// Extended response from /api/designs/{id}/files — includes GCS viewUrl
+export interface DesignImageResponse extends DesignImage {
+  designId: number
+  viewUrl?: string
+  caption?: string | null
+  uploadedBy?: number | null
+}
+
 export interface DesignResponse {
   id: number
   projectProviderId: number
@@ -263,6 +271,118 @@ export const designs = {
 
   removeImage: (id: number, imageId: number) =>
     request<void>(`/designs/${id}/images/${imageId}`, { method: 'DELETE' }),
+}
+
+// ── File Upload (GCS) ────────────────────────────────────────────────────────
+
+export interface FileUploadResponse {
+  objectName: string
+  viewUrl: string
+  contentType: string
+  sizeBytes: number
+}
+
+export const files = {
+  /** Upload any file. Returns objectName + viewUrl for display. */
+  upload: async (file: File, folder?: string): Promise<FileUploadResponse> => {
+    const token = getToken()
+    const form = new FormData()
+    form.append('file', file)
+    const url = `${BASE}/files${folder ? `?folder=${encodeURIComponent(folder)}` : ''}`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    })
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`)
+    return res.json()
+  },
+
+  /** Upload image only (jpg/png/webp/gif). */
+  uploadImage: async (file: File, folder?: string): Promise<FileUploadResponse> => {
+    const token = getToken()
+    const form = new FormData()
+    form.append('file', file)
+    const url = `${BASE}/files/images${folder ? `?folder=${encodeURIComponent(folder)}` : ''}`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    })
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`)
+    return res.json()
+  },
+
+  /** Proxy view URL — use as <img src> or download link. No auth needed. */
+  viewUrl: (objectName: string) => `${BASE}/files/view?objectName=${encodeURIComponent(objectName)}`,
+
+  delete: (objectName: string) =>
+    request<void>(`/files?objectName=${encodeURIComponent(objectName)}`, { method: 'DELETE' }),
+}
+
+// ── Reviews ───────────────────────────────────────────────────────────────────
+
+export interface ReviewScoreResponse {
+  id: number
+  dimension: string
+  score: number
+}
+
+export interface ReviewResponse {
+  id: number
+  projectProviderId: number
+  projectId: number | null
+  providerId: number | null
+  overallRating: number
+  comment: string | null
+  scores: ReviewScoreResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProviderRatingSummaryResponse {
+  providerId: number
+  reviewCount: number
+  averageRating: number | null
+  dimensionAverages: Record<string, number>
+}
+
+export const reviews = {
+  list: (params: { projectProviderId?: number; providerId?: number; pageSize?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
+    if (params.providerId) q.set('providerId', String(params.providerId))
+    q.set('pageSize', String(params.pageSize ?? 20))
+    return request<{ items: ReviewResponse[]; totalCount: number }>(`/reviews?${q}`)
+  },
+
+  getProviderSummary: (providerId: number) =>
+    request<ProviderRatingSummaryResponse>(`/reviews/providers/${providerId}/summary`),
+}
+
+// ── Engagement Overview ────────────────────────────────────────────────────────
+
+export interface EngagementOverviewResponse {
+  projectProviderId: number
+  contractType: string
+  status: string
+  project: {
+    id: number
+    name: string
+    address: string
+    areaM2: number
+    budget: number
+    status: string
+  }
+  brief: DesignBriefResponse | null
+  aiRecommendations: unknown[] | null
+  approvedDesigns: DesignResponse[] | null
+}
+
+export const engagementOverview = {
+  get: (projectProviderId: number) =>
+    request<{ data: EngagementOverviewResponse }>(`/project-providers/${projectProviderId}/overview`)
+      .then(r => r.data),
 }
 
 // ── Project Applications ──────────────────────────────────────────────────────

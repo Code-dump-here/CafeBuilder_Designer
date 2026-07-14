@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { projects, designBriefs, type ProjectResponse, type DesignBriefResponse } from '@/lib/api'
+import { engagementOverview, projects, designBriefs, type ProjectResponse, type DesignBriefResponse, type EngagementOverviewResponse } from '@/lib/api'
 
 // TODO (mock data — will be used when BE returns these fields):
 // ProjectResponse is missing: tags (cafeType), projectCode, urgent flag, ownerName, floors
@@ -41,11 +41,14 @@ function Section({ title, children, badge }: { title: string; children: React.Re
 
 export default function OverviewPage() {
   const searchParams = useSearchParams()
-  const paramId = searchParams.get('projectId')
-  const projectId = paramId ? Number(paramId) : null
+  const paramProjectId = searchParams.get('projectId')
+  const paramProviderId = searchParams.get('projectProviderId')
+  const projectId = paramProjectId ? Number(paramProjectId) : null
+  const projectProviderId = paramProviderId ? Number(paramProviderId) : null
 
   const [project, setProject] = useState<ProjectResponse | null>(null)
   const [brief, setBrief] = useState<DesignBriefResponse | null>(null)
+  const [overview, setOverview] = useState<EngagementOverviewResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeAction, setActiveAction] = useState('Site Visit')
@@ -55,18 +58,26 @@ export default function OverviewPage() {
     setLoading(true)
     setError(null)
     try {
-      const [proj, briefRes] = await Promise.all([
-        projects.get(projectId),
-        designBriefs.list({ projectId }),
-      ])
-      setProject(proj)
-      setBrief(briefRes.items[0] ?? null)
+      if (projectProviderId) {
+        // Prefer the richer engagement overview endpoint which returns project + brief in one call
+        const ov = await engagementOverview.get(projectProviderId)
+        setOverview(ov)
+        setProject(ov.project as unknown as ProjectResponse)
+        setBrief(ov.brief ?? null)
+      } else {
+        const [proj, briefRes] = await Promise.all([
+          projects.get(projectId),
+          designBriefs.list({ projectId }),
+        ])
+        setProject(proj)
+        setBrief(briefRes.items[0] ?? null)
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load')
     } finally {
       setLoading(false)
     }
-  }, [projectId])
+  }, [projectId, projectProviderId])
 
   useEffect(() => { load() }, [load])
 

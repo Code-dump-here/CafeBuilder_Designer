@@ -5,8 +5,10 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   projectProviders,
   projectApplications,
+  reviews,
   type ProjectProviderResponse,
   type ProjectApplicationResponse,
+  type ProviderRatingSummaryResponse,
 } from '@/lib/api'
 
 function getProviderId(): number | null {
@@ -36,6 +38,7 @@ export default function MyProjectsPage() {
   const [tab, setTab] = useState<Tab>('all')
   const [engagements, setEngagements] = useState<ProjectProviderResponse[]>([])
   const [applications, setApplications] = useState<ProjectApplicationResponse[]>([])
+  const [ratingSummary, setRatingSummary] = useState<ProviderRatingSummaryResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
@@ -54,6 +57,8 @@ export default function MyProjectsPage() {
       ])
       setEngagements(engRes.items)
       setApplications(appRes.items)
+      // Load rating summary separately — don't block if it fails
+      reviews.getProviderSummary(providerId).then(setRatingSummary).catch(() => {})
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load')
     } finally {
@@ -138,6 +143,13 @@ export default function MyProjectsPage() {
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: '#eeded1', color: '#2d1e14' }}>Designer</span>
               </div>
               <p className="text-sm" style={{ color: '#5b483f', fontFamily: 'Plus Jakarta Sans, Inter, sans-serif' }}>Track all your café design projects</p>
+              {ratingSummary && ratingSummary.reviewCount > 0 && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span className="text-sm font-semibold" style={{ color: '#2d1e14' }}>{ratingSummary.averageRating?.toFixed(1)}</span>
+                  <span className="text-xs" style={{ color: '#a89888' }}>({ratingSummary.reviewCount} review{ratingSummary.reviewCount !== 1 ? 's' : ''})</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium relative" style={{ borderColor: '#d4c8be', color: '#2d1e14' }}>
