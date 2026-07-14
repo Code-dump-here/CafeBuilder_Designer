@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   projectProviders,
   projectApplications,
@@ -35,6 +36,9 @@ const TABS: { key: Tab; label: string }[] = [
 ]
 
 export default function MyProjectsPage() {
+  const router = useRouter()
+  const [avatarOpen, setAvatarOpen] = useState(false)
+  const avatarRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>('all')
   const [engagements, setEngagements] = useState<ProjectProviderResponse[]>([])
   const [applications, setApplications] = useState<ProjectApplicationResponse[]>([])
@@ -45,6 +49,22 @@ export default function MyProjectsPage() {
   const [search, setSearch] = useState('')
 
   const providerId = getProviderId()
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setAvatarOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  function handleLogout() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('accountId')
+    router.push('/sign-in')
+  }
 
   const load = useCallback(async () => {
     if (!providerId) { setLoading(false); return }
@@ -123,10 +143,24 @@ export default function MyProjectsPage() {
               <Link href="/my-projects" style={{ color: '#1c1008' }}>My Projects</Link>
               <Link href="/browse" style={{ color: '#5b483f' }}>Browse</Link>
             </nav>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#e8ddd6] flex items-center justify-center">
+            <div className="flex items-center gap-3 relative" ref={avatarRef}>
+              <button
+                onClick={() => setAvatarOpen(o => !o)}
+                className="w-8 h-8 rounded-full bg-[#e8ddd6] flex items-center justify-center focus:outline-none"
+              >
                 <span className="text-xs font-semibold" style={{ color: '#1c1008' }}>JD</span>
-              </div>
+              </button>
+              {avatarOpen && (
+                <div className="absolute right-0 top-10 w-40 rounded-xl shadow-lg border z-50 overflow-hidden" style={{ backgroundColor: '#fbfaf9', borderColor: '#d4c8be' }}>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-[#f5ede6] transition-colors"
+                    style={{ color: '#991b1b' }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
