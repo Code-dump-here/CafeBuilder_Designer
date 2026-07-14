@@ -18,6 +18,7 @@ const navSections = [
     items: [
       { href: '/concept', label: 'Concept' },
       { href: '/overview', label: 'Overview' },
+      { href: '/design-management', label: 'Design Management' },
     ],
   },
   {
