@@ -81,6 +81,54 @@ export const projectProviders = {
     request<ProjectProviderResponse>(`/project-providers/${id}/reject`, { method: 'POST' }),
 }
 
+// ── Designs ──────────────────────────────────────────────────────────────────
+
+export type DesignType = 'concept' | 'layout_2d' | 'render_3d' | 'technical_drawing'
+export type DesignStatus = 'in_progress' | 'submitted' | 'revision' | 'approved'
+
+export interface DesignImage {
+  id: number
+  imageUrl: string
+  createdAt: string
+}
+
+export interface DesignResponse {
+  id: number
+  projectProviderId: number
+  title: string
+  type: DesignType
+  status: DesignStatus
+  version: string
+  images: DesignImage[]
+  createdAt: string
+  updatedAt: string
+}
+
+export const designs = {
+  list: (params: { projectProviderId?: number; status?: string } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
+    if (params.status) q.set('status', params.status)
+    q.set('pageSize', '100')
+    return request<Paginated<DesignResponse>>(`/designs?${q}`)
+  },
+
+  create: (body: { projectProviderId: number; title: string; type: DesignType }) =>
+    request<DesignResponse>('/designs', { method: 'POST', body: JSON.stringify(body) }),
+
+  submit: (id: number) =>
+    request<DesignResponse>(`/designs/${id}/submit`, { method: 'POST' }),
+
+  startRevision: (id: number) =>
+    request<DesignResponse>(`/designs/${id}/start-revision`, { method: 'POST' }),
+
+  addImage: (id: number, imageUrl: string) =>
+    request<DesignImage>(`/designs/${id}/images`, { method: 'POST', body: JSON.stringify({ imageUrl }) }),
+
+  removeImage: (id: number, imageId: number) =>
+    request<void>(`/designs/${id}/images/${imageId}`, { method: 'DELETE' }),
+}
+
 // ── Project Applications ──────────────────────────────────────────────────────
 
 export const projectApplications = {
