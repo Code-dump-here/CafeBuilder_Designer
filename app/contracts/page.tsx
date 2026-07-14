@@ -13,7 +13,7 @@ const NAV = [
   { label: 'Settings', icon: '⚙' },
 ]
 
-const CONTRACT_FORM = [
+const CONTRACT_FORM: { id: string; label: string; fields: { label: string; type?: string; placeholder?: string; options?: string[] }[] }[] = [
   {
     id: 'parties',
     label: 'Contracting Parties',
