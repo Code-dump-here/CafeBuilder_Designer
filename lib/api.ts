@@ -81,6 +81,98 @@ export const projectProviders = {
     request<ProjectProviderResponse>(`/project-providers/${id}/reject`, { method: 'POST' }),
 }
 
+// ── Projects ─────────────────────────────────────────────────────────────────
+
+export interface ProjectResponse {
+  id: number
+  ownerId: number
+  name: string
+  address: string
+  areaM2: number
+  budget: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export const projects = {
+  get: (id: number) =>
+    request<{ data: ProjectResponse }>(`/projects/${id}`).then((r) => r.data),
+
+  list: (params: { ownerId?: number; pageSize?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.ownerId) q.set('ownerId', String(params.ownerId))
+    q.set('pageSize', String(params.pageSize ?? 50))
+    return request<{ data: Paginated<ProjectResponse> }>(`/projects?${q}`).then((r) => r.data)
+  },
+}
+
+// ── Design Briefs ─────────────────────────────────────────────────────────────
+
+export interface DesignBriefResponse {
+  id: number
+  projectId: number
+  targetCustomer: string
+  style: string
+  mood: string
+  seatCount: number | null
+  timeline: string | null
+  brandNote: string | null
+  businessModel: string | null
+  businessGoals: string | null
+  operationNote: string | null
+  createdAt: string
+}
+
+export const designBriefs = {
+  list: (params: { projectId?: number; pageSize?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectId) q.set('projectId', String(params.projectId))
+    q.set('pageSize', String(params.pageSize ?? 10))
+    return request<{ data: Paginated<DesignBriefResponse> }>(`/design-briefs?${q}`).then((r) => r.data)
+  },
+
+  get: (id: number) =>
+    request<{ data: DesignBriefResponse }>(`/design-briefs/${id}`).then((r) => r.data),
+}
+
+// ── Service Providers ─────────────────────────────────────────────────────────
+
+export interface ServiceProviderResponse {
+  id: number
+  accountId: number
+  displayName: string
+  providerType: string
+  capability: string
+  bio: string | null
+  companyTaxCode: string | null
+  yearsExperience: number | null
+  portfolioHeadline: string | null
+  isVerified: boolean
+  avgRating: number
+  createdAt: string
+}
+
+export const serviceProviders = {
+  create: (body: {
+    accountId: number
+    displayName: string
+    providerType: string
+    capability: string
+    bio?: string
+    companyTaxCode?: string
+    yearsExperience?: number
+    portfolioHeadline?: string
+  }) =>
+    request<{ data: ServiceProviderResponse }>('/service-providers', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }).then((r) => r.data),
+
+  get: (id: number) =>
+    request<{ data: ServiceProviderResponse }>(`/service-providers/${id}`).then((r) => r.data),
+}
+
 // ── Project Posts (public listings providers can apply to) ───────────────────
 
 export interface ProjectPostResponse {

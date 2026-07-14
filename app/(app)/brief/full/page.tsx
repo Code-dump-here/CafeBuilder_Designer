@@ -1,63 +1,82 @@
-// TODO: Wire to BE once a project-brief endpoint exists for providers.
-// All sections below are mock data — replace with real API data when available.
-// Fields needed from BE:
-//   Project Details: projectName, location, totalArea, budget, timeline
-//   Brand & Concept: brandWords, designStyle, mood, targetCustomer
-//   Space Requirements: cafeType, seatingCount, functionalAreas
-//   Site Survey: floor, dimensions, storefrontWidth, naturalLight, ventilation, notes
-//   Business Goals: primaryGoal, differentiators
+'use client'
 
-/*
-const sections = [
-  {
-    title: 'Project Details',
-    items: [
-      { label: 'Project name', value: 'Artisan Reserve Roastery' },
-      { label: 'Location', value: 'District 1, Ho Chi Minh City' },
-      { label: 'Total area', value: '96 m²' },
-      { label: 'Budget', value: '$120,000' },
-      { label: 'Timeline', value: '14 weeks' },
-    ],
-  },
-  {
-    title: 'Brand & Concept',
-    items: [
-      { label: 'Brand in 3 words', value: 'Bold, Authentic, Local' },
-      { label: 'Design style', value: 'Modern organic' },
-      { label: 'Mood', value: 'Warm & cozy' },
-      { label: 'Target customer', value: 'Urban professionals, 25–40, specialty coffee enthusiasts who value craft and environment.' },
-    ],
-  },
-  {
-    title: 'Space Requirements',
-    items: [
-      { label: 'Cafe type', value: 'Dine-in, Specialty coffee bar' },
-      { label: 'Seating count', value: '40–50 seats' },
-      { label: 'Functional areas', value: 'Customer seating, Coffee bar, Order counter, Small private section' },
-    ],
-  },
-  {
-    title: 'Site Survey',
-    items: [
-      { label: 'Floor', value: 'Ground floor' },
-      { label: 'Dimensions', value: '12m × 8m, ceiling 3.5m' },
-      { label: 'Storefront width', value: '6m' },
-      { label: 'Natural light', value: 'Good — moderate windows facing east' },
-      { label: 'Ventilation', value: 'Mixed' },
-      { label: 'Notes', value: 'Existing plumbing along south wall. Load-bearing column at center.' },
-    ],
-  },
-  {
-    title: 'Business Goals',
-    items: [
-      { label: 'Primary goal', value: 'Create a destination cafe that drives repeat visits and social media presence.' },
-      { label: 'Differentiators', value: 'In-house roasting display, specialty equipment visible to guests, curated local art.' },
-    ],
-  },
-]
-*/
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { projects, designBriefs, type ProjectResponse, type DesignBriefResponse } from '@/lib/api'
+
+// TODO (mock data — will be used when BE adds these fields):
+// ProjectResponse missing: floors, storefront width, projectCode
+// DesignBriefResponse missing: functionalAreas, siteNotes (plumbing/structural)
+// Space Requirements section — cafeType maps to businessModel, seating to seatCount, but functionalAreas has no BE field yet
+// Site Survey section — only address is in BE; dimensions/ceiling/light/ventilation/notes not returned yet
 
 export default function BriefFullPage() {
+  const searchParams = useSearchParams()
+  const projectId = searchParams.get('projectId') ? Number(searchParams.get('projectId')) : null
+
+  const [project, setProject] = useState<ProjectResponse | null>(null)
+  const [brief, setBrief] = useState<DesignBriefResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    if (!projectId) { setLoading(false); return }
+    setLoading(true)
+    setError(null)
+    try {
+      const [proj, briefRes] = await Promise.all([
+        projects.get(projectId),
+        designBriefs.list({ projectId }),
+      ])
+      setProject(proj)
+      setBrief(briefRes.items[0] ?? null)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load')
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId])
+
+  useEffect(() => { load() }, [load])
+
+  const sections = project && brief ? [
+    {
+      title: 'Project Details',
+      items: [
+        { label: 'Project name', value: project.name },
+        { label: 'Location', value: project.address },
+        { label: 'Total area', value: `${project.areaM2} m²` },
+        { label: 'Budget', value: `${project.budget.toLocaleString()} VND` },
+        { label: 'Timeline', value: brief.timeline ?? '—' },
+      ],
+    },
+    {
+      title: 'Brand & Concept',
+      items: [
+        { label: 'Brand in 3 words', value: brief.brandNote ?? '—' },
+        { label: 'Design style', value: brief.style },
+        { label: 'Mood', value: brief.mood },
+        { label: 'Target customer', value: brief.targetCustomer },
+      ],
+    },
+    {
+      title: 'Space Requirements',
+      items: [
+        { label: 'Cafe type', value: brief.businessModel ?? '—' },
+        { label: 'Seating count', value: brief.seatCount != null ? `${brief.seatCount} seats` : '—' },
+        // TODO: functionalAreas not in BE yet
+      ],
+    },
+    {
+      title: 'Business Goals',
+      items: [
+        { label: 'Primary goal', value: brief.businessGoals ?? '—' },
+        { label: 'Operation notes', value: brief.operationNote ?? '—' },
+      ],
+    },
+    // TODO: Site Survey section — dimensions, ceiling, storefront, light, ventilation not in BE yet
+  ] : []
+
   return (
     <div className="p-10 max-w-3xl">
       <header className="mb-8 flex items-start justify-between">
@@ -76,13 +95,47 @@ export default function BriefFullPage() {
         </button>
       </header>
 
-      <div className="flex flex-col items-center justify-center py-20 rounded-xl border" style={{ borderColor: '#d4c8be', backgroundColor: '#fdfbfa' }}>
-        <div className="text-4xl mb-3">📄</div>
-        <p className="font-medium mb-1" style={{ color: '#1c1008' }}>Full brief coming soon</p>
-        <p className="text-sm text-center max-w-xs" style={{ color: '#7a6a5a' }}>
-          Waiting for the project brief endpoint to be available on the BE.
-        </p>
-      </div>
+      {!projectId ? (
+        <Empty icon="📄" msg="No project selected" sub="Open from a project to see its full brief." />
+      ) : error ? (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>
+          <span>⚠</span> {error} <button onClick={load} className="ml-auto underline text-xs">Retry</button>
+        </div>
+      ) : loading ? (
+        <div className="flex flex-col gap-4">
+          {[1,2,3].map((i) => <div key={i} className="h-40 rounded-xl animate-pulse" style={{ backgroundColor: '#f0ebe5' }} />)}
+        </div>
+      ) : !brief ? (
+        <Empty icon="📄" msg="No brief submitted yet" sub="The project owner has not submitted a brief for this project." />
+      ) : (
+        <div className="flex flex-col gap-6">
+          {sections.map((section) => (
+            <div key={section.title} className="rounded-xl border overflow-hidden" style={{ borderColor: '#e8ddd6' }}>
+              <div className="px-6 py-3" style={{ backgroundColor: '#f5ede6' }}>
+                <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#a89888' }}>{section.title}</h2>
+              </div>
+              <div className="divide-y" style={{ borderColor: '#f0e8e0' }}>
+                {section.items.map((item) => (
+                  <div key={item.label} className="flex gap-4 px-6 py-4 bg-white">
+                    <span className="text-sm font-medium w-40 flex-shrink-0" style={{ color: '#a89888' }}>{item.label}</span>
+                    <span className="text-sm" style={{ color: '#1c1008' }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Empty({ icon, msg, sub }: { icon: string; msg: string; sub: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 rounded-xl border" style={{ borderColor: '#d4c8be', backgroundColor: '#fdfbfa' }}>
+      <div className="text-4xl mb-3">{icon}</div>
+      <p className="font-medium mb-1" style={{ color: '#1c1008' }}>{msg}</p>
+      <p className="text-sm text-center max-w-xs" style={{ color: '#7a6a5a' }}>{sub}</p>
     </div>
   )
 }
