@@ -33,6 +33,7 @@ export default function BrowsePage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [applyTarget, setApplyTarget] = useState<ProjectPostResponse | null>(null)
+  const [briefTarget, setBriefTarget] = useState<ProjectPostResponse | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -132,7 +133,11 @@ export default function BrowsePage() {
                     >
                       Submit proposal
                     </button>
-                    <button className="px-5 py-2 rounded-lg border text-sm font-medium whitespace-nowrap" style={{ borderColor: '#d4c8be', color: '#1c1008' }}>
+                    <button
+                      onClick={() => setBriefTarget(p)}
+                      className="px-5 py-2 rounded-lg border text-sm font-medium whitespace-nowrap"
+                      style={{ borderColor: '#d4c8be', color: '#1c1008' }}
+                    >
                       View brief
                     </button>
                   </div>
@@ -148,6 +153,14 @@ export default function BrowsePage() {
           post={applyTarget}
           onClose={() => setApplyTarget(null)}
           onApplied={() => { setApplyTarget(null); load() }}
+        />
+      )}
+
+      {briefTarget && (
+        <BriefDialog
+          post={briefTarget}
+          onClose={() => setBriefTarget(null)}
+          onApply={() => { setApplyTarget(briefTarget); setBriefTarget(null) }}
         />
       )}
     </div>
@@ -230,6 +243,59 @@ function ApplyDialog({ post, onClose, onApplied }: { post: ProjectPostResponse; 
             style={{ backgroundColor: '#1c1008' }}
           >
             {loading ? 'Submitting…' : 'Submit Proposal'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BriefDialog({ post, onClose, onApply }: { post: ProjectPostResponse; onClose: () => void; onApply: () => void }) {
+  const s = STATUS_STYLE[post.status?.toLowerCase()] ?? STATUS_STYLE.open
+  const rows: { label: string; value: string }[] = [
+    { label: 'Location', value: post.location ?? '—' },
+    { label: 'Area', value: post.area != null ? `${post.area} m²` : '—' },
+    { label: 'Budget', value: post.budget ?? '—' },
+    { label: 'Style', value: post.style ?? '—' },
+    { label: 'Deadline', value: post.deadline ? new Date(post.deadline).toLocaleDateString() : '—' },
+    { label: 'Proposals', value: post.proposalCount != null ? String(post.proposalCount) : '—' },
+    { label: 'Posted', value: new Date(post.createdAt).toLocaleDateString() },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-lg rounded-2xl shadow-xl p-6 relative max-h-[85vh] overflow-y-auto" style={{ backgroundColor: '#fdfbfa' }}>
+        <button onClick={onClose} className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-lg" style={{ color: '#a89888' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        <div className="flex items-center gap-3 mb-1 pr-8">
+          <h2 className="text-base font-semibold" style={{ color: '#1c1008' }}>{post.title}</h2>
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize flex-shrink-0" style={{ backgroundColor: s.bg, color: s.color }}>
+            {post.status}
+          </span>
+        </div>
+        <p className="text-xs mb-5" style={{ color: '#a89888' }}>Project brief</p>
+
+        {post.description && (
+          <p className="text-sm leading-relaxed mb-5" style={{ color: '#2d1e14' }}>{post.description}</p>
+        )}
+
+        <div className="rounded-xl border overflow-hidden mb-6" style={{ borderColor: '#e8ddd6' }}>
+          {rows.map((r) => (
+            <div key={r.label} className="flex justify-between gap-4 px-4 py-2.5 text-sm border-b last:border-0 bg-white" style={{ borderColor: '#f0e8e0' }}>
+              <span style={{ color: '#a89888' }}>{r.label}</span>
+              <span className="font-medium text-right" style={{ color: '#1c1008' }}>{r.value}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-1.5 rounded-lg border text-xs font-medium" style={{ borderColor: '#d4c8be', color: '#2d1e14' }}>Close</button>
+          <button onClick={onApply} className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ backgroundColor: '#1c1008' }}>
+            Submit proposal
           </button>
         </div>
       </div>
