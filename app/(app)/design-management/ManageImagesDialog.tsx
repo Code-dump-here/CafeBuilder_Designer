@@ -147,7 +147,10 @@ async function uploadDesignFile(designId: number, file: File) {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: form,
   })
-  if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`)
+  if (!res.ok) {
+    console.error(`[API] POST ${BASE}/designs/${designId}/files failed (${res.status})`, await res.text())
+    throw new Error(`Error ${res.status} — check the browser console for details`)
+  }
   return res.json()
 }
 
@@ -159,5 +162,8 @@ async function removeDesignFile(designId: number, fileId: number) {
     method: 'DELETE',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
-  if (!res.ok && res.status !== 204) throw new Error(await res.text() || `HTTP ${res.status}`)
+  if (!res.ok && res.status !== 204) {
+    console.error(`[API] DELETE ${BASE}/designs/${designId}/files/${fileId} failed (${res.status})`, await res.text())
+    throw new Error(`Error ${res.status} — check the browser console for details`)
+  }
 }

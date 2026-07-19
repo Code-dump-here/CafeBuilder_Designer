@@ -5,19 +5,34 @@ function getToken(): string | null {
   return localStorage.getItem('accessToken')
 }
 
+/** Logs full error details to the console and returns a short UI-friendly Error. */
+function apiError(method: string, url: string, status: number | string, body?: unknown): Error {
+  console.error(`[API] ${method} ${url} failed (${status})`, body ?? '')
+  return new Error(`Error ${status} — check the browser console for details`)
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getToken()
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
-  })
+  const method = options?.method ?? 'GET'
+  const url = `${BASE}${path}`
+  let res: Response
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    })
+  } catch (e) {
+    throw apiError(method, url, 'network', e)
+  }
   if (!res.ok) {
-    const err = await res.text()
-    throw new Error(err || `HTTP ${res.status}`)
+    const errBody = await res.text()
+    let parsed: unknown = errBody
+    try { parsed = JSON.parse(errBody) } catch { /* keep raw text */ }
+    throw apiError(method, url, res.status, parsed)
   }
   if (res.status === 204) return undefined as T
   return res.json()
@@ -312,7 +327,7 @@ export const files = {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,
     })
-    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`)
+    if (!res.ok) throw apiError('POST', url, res.status, await res.text())
     return res.json()
   },
 
@@ -327,7 +342,7 @@ export const files = {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,
     })
-    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`)
+    if (!res.ok) throw apiError('POST', url, res.status, await res.text())
     return res.json()
   },
 
