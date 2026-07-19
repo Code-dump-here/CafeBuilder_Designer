@@ -27,14 +27,18 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 interface AuthResponse {
   accessToken: string
+  refreshToken: string
   accountId: number
+  email: string
+  role: string
 }
 
 export const auth = {
   login: (body: { email: string; password: string }) =>
     request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
 
-  register: (body: { fullName: string; email: string; phoneNumber?: string; password: string }) =>
+  /** role: 'owner' | 'provider' | 'admin' — this FE always registers providers. */
+  register: (body: { email: string; password: string; phone?: string; role: string }) =>
     request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
 }
 
@@ -72,9 +76,12 @@ export interface ProjectApplicationResponse {
 
 interface Paginated<T> {
   items: T[]
-  totalCount: number
+  totalItems: number
   pageNumber: number
   pageSize: number
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
 }
 
 // ── Project Providers (engagements) ──────────────────────────────────────────
@@ -112,13 +119,13 @@ export interface ProjectResponse {
 
 export const projects = {
   get: (id: number) =>
-    request<{ data: ProjectResponse }>(`/projects/${id}`).then((r) => r.data),
+    request<ProjectResponse>(`/projects/${id}`),
 
   list: (params: { ownerId?: number; pageSize?: number } = {}) => {
     const q = new URLSearchParams()
     if (params.ownerId) q.set('ownerId', String(params.ownerId))
     q.set('pageSize', String(params.pageSize ?? 50))
-    return request<{ data: Paginated<ProjectResponse> }>(`/projects?${q}`).then((r) => r.data)
+    return request<Paginated<ProjectResponse>>(`/projects?${q}`)
   },
 }
 
@@ -144,11 +151,11 @@ export const designBriefs = {
     const q = new URLSearchParams()
     if (params.projectId) q.set('projectId', String(params.projectId))
     q.set('pageSize', String(params.pageSize ?? 10))
-    return request<{ data: Paginated<DesignBriefResponse> }>(`/design-briefs?${q}`).then((r) => r.data)
+    return request<Paginated<DesignBriefResponse>>(`/design-briefs?${q}`)
   },
 
   get: (id: number) =>
-    request<{ data: DesignBriefResponse }>(`/design-briefs/${id}`).then((r) => r.data),
+    request<DesignBriefResponse>(`/design-briefs/${id}`),
 }
 
 // ── Service Providers ─────────────────────────────────────────────────────────
@@ -179,13 +186,13 @@ export const serviceProviders = {
     yearsExperience?: number
     portfolioHeadline?: string
   }) =>
-    request<{ data: ServiceProviderResponse }>('/service-providers', {
+    request<ServiceProviderResponse>('/service-providers', {
       method: 'POST',
       body: JSON.stringify(body),
-    }).then((r) => r.data),
+    }),
 
   get: (id: number) =>
-    request<{ data: ServiceProviderResponse }>(`/service-providers/${id}`).then((r) => r.data),
+    request<ServiceProviderResponse>(`/service-providers/${id}`),
 }
 
 // ── Project Posts (public listings providers can apply to) ───────────────────
@@ -277,13 +284,14 @@ export const designs = {
 
 export interface FileUploadResponse {
   objectName: string
-  viewUrl: string
+  /** Public GCS URL — stable, use directly as img src / download link. */
+  url: string
   contentType: string
   sizeBytes: number
 }
 
 export const files = {
-  /** Upload any file. Returns objectName + viewUrl for display. */
+  /** Upload any file. Returns objectName + public url for display. */
   upload: async (file: File, folder?: string): Promise<FileUploadResponse> => {
     const token = getToken()
     const form = new FormData()
@@ -353,7 +361,7 @@ export const reviews = {
     if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
     if (params.providerId) q.set('providerId', String(params.providerId))
     q.set('pageSize', String(params.pageSize ?? 20))
-    return request<{ items: ReviewResponse[]; totalCount: number }>(`/reviews?${q}`)
+    return request<Paginated<ReviewResponse>>(`/reviews?${q}`)
   },
 
   getProviderSummary: (providerId: number) =>
@@ -381,8 +389,7 @@ export interface EngagementOverviewResponse {
 
 export const engagementOverview = {
   get: (projectProviderId: number) =>
-    request<{ data: EngagementOverviewResponse }>(`/project-providers/${projectProviderId}/overview`)
-      .then(r => r.data),
+    request<EngagementOverviewResponse>(`/project-providers/${projectProviderId}/overview`),
 }
 
 // ── Contracts (OTP-gated signing: drafted → pending_otp → confirmed) ──────────

@@ -21,6 +21,7 @@ export default function SignInPage() {
       const res = await auth.login({ email, password })
       if (typeof window !== 'undefined') {
         localStorage.setItem('accessToken', res.accessToken)
+        localStorage.setItem('refreshToken', res.refreshToken)
         localStorage.setItem('accountId', String(res.accountId))
       }
       router.push('/my-projects')

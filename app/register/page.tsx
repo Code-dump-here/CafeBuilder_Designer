@@ -20,7 +20,13 @@ export default function RegisterPage() {
     setLoading(true)
     setError(null)
     try {
-      await auth.register({ fullName, email, phoneNumber: phone, password })
+      const res = await auth.register({ email, password, phone: phone || undefined, role: 'provider' })
+      localStorage.setItem('accessToken', res.accessToken)
+      localStorage.setItem('refreshToken', res.refreshToken)
+      localStorage.setItem('accountId', String(res.accountId))
+      localStorage.setItem('pendingEmail', email)
+      // fullName is used later when creating the provider profile (displayName)
+      localStorage.setItem('pendingFullName', fullName)
       router.push('/verify-email')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Registration failed')
