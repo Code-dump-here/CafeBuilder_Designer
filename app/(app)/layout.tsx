@@ -26,6 +26,9 @@ const navSections = [
     label: 'Collaboration',
     items: [
       { href: '/browse', label: 'Browse Projects' },
+      { href: '/contracts', label: 'Contracts' },
+      { href: '/contracts/create', label: 'Create Contract' },
+      { href: '/send-contract', label: 'Send Contract' },
     ],
   },
 ]
