@@ -491,11 +491,11 @@ export const projectApplications = {
   },
 
   create: (body: { postId: number; providerId: number; proposal: string; estimatedDurationDays?: number }) =>
-    request<ProjectApplicationResponse>('/project-applications', {
+    request<ProjectApplicationResponse>('/project-applications/apply', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
   withdraw: (id: number) =>
-    request<void>(`/project-applications/${id}`, { method: 'DELETE' }),
+    request<void>(`/project-applications/${id}/withdraw`, { method: 'DELETE' }),
 }
