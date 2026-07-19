@@ -21,7 +21,7 @@ const PAGES = [
     ],
   },
   {
-    section: 'Per-Project (needs ?projectId= + ?projectProviderId= in URL)',
+    section: 'Per-Project (needs ?projectId= + ?projectWorkingId= in URL)',
     color: '#065f46',
     items: [
       { href: '/overview?projectId=1',          label: 'Overview',                 note: 'GET /api/projects/{id} + /design-briefs?projectId=' },
@@ -29,8 +29,8 @@ const PAGES = [
       { href: '/brief/full?projectId=1',        label: 'Brief — Full',             note: 'GET /api/projects/{id} + /design-briefs?projectId=' },
       { href: '/brief/question',                label: 'Brief — Questions',        note: 'no BE endpoint yet' },
       { href: '/site-survey',                   label: 'Site Survey',              note: 'no BE endpoint yet' },
-      { href: '/concept?projectProviderId=1',   label: 'Concept',                  note: 'GET /api/designs?type=concept&projectProviderId=' },
-      { href: '/design-management?projectProviderId=1', label: 'Design Management', note: 'GET /api/designs?projectProviderId= + POST/submit/revision/images' },
+      { href: '/concept?projectWorkingId=1',   label: 'Concept',                  note: 'GET /api/designs?type=concept&projectWorkingId=' },
+      { href: '/design-management?projectWorkingId=1', label: 'Design Management', note: 'GET /api/designs?projectWorkingId= + POST/submit/revision/images' },
     ],
   },
   {

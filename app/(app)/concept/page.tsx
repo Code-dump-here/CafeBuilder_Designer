@@ -9,9 +9,9 @@ import { designs, type DesignResponse, type DesignStatus } from '@/lib/api'
 // - tags (style tags like 'Biophilic', 'Warm tones') — BE Design has no tags field yet
 // These will be re-added once the BE extends the Design model with them.
 
-function getProjectProviderId(): number | null {
+function getProjectWorkingId(): number | null {
   if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem('projectProviderId')
+  const raw = localStorage.getItem('projectWorkingId')
   return raw ? Number(raw) : null
 }
 
@@ -33,19 +33,19 @@ export default function ConceptPage() {
 
 function ConceptInner() {
   const searchParams = useSearchParams()
-  const paramId = searchParams.get('projectProviderId')
-  const projectProviderId = paramId ? Number(paramId) : getProjectProviderId()
+  const paramId = searchParams.get('projectWorkingId')
+  const projectWorkingId = paramId ? Number(paramId) : getProjectWorkingId()
 
   const [items, setItems] = useState<DesignResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!projectProviderId) { setLoading(false); return }
+    if (!projectWorkingId) { setLoading(false); return }
     setLoading(true)
     setError(null)
     try {
-      const res = await designs.list({ projectProviderId })
+      const res = await designs.list({ projectWorkingId })
       // filter client-side to concept type
       setItems(res.items.filter((d) => d.type === 'concept'))
     } catch (e: unknown) {
@@ -53,7 +53,7 @@ function ConceptInner() {
     } finally {
       setLoading(false)
     }
-  }, [projectProviderId])
+  }, [projectWorkingId])
 
   useEffect(() => { load() }, [load])
 
@@ -66,9 +66,9 @@ function ConceptInner() {
           <p className="text-sm mt-2" style={{ color: '#7a6a5a' }}>Design directions proposed for the client&apos;s review.</p>
         </div>
         {/* Add concept → goes to design-management with type pre-selected */}
-        {projectProviderId && (
+        {projectWorkingId && (
           <a
-            href={`/design-management?projectProviderId=${projectProviderId}`}
+            href={`/design-management?projectWorkingId=${projectWorkingId}`}
             className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white"
             style={{ backgroundColor: '#1c1008' }}
           >
@@ -77,7 +77,7 @@ function ConceptInner() {
         )}
       </header>
 
-      {!projectProviderId ? (
+      {!projectWorkingId ? (
         <div className="flex flex-col items-center justify-center py-20 rounded-xl border" style={{ borderColor: '#d4c8be', backgroundColor: '#fdfbfa' }}>
           <div className="text-4xl mb-3">🎨</div>
           <p className="font-medium mb-1" style={{ color: '#1c1008' }}>No engagement selected</p>

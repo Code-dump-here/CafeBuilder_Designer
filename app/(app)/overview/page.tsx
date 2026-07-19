@@ -51,9 +51,9 @@ function OverviewInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const paramProjectId = searchParams.get('projectId')
-  const paramProviderId = searchParams.get('projectProviderId')
+  const paramProviderId = searchParams.get('projectWorkingId')
   const projectId = paramProjectId ? Number(paramProjectId) : null
-  const projectProviderId = paramProviderId ? Number(paramProviderId) : null
+  const projectWorkingId = paramProviderId ? Number(paramProviderId) : null
 
   const [project, setProject] = useState<ProjectResponse | null>(null)
   const [brief, setBrief] = useState<DesignBriefResponse | null>(null)
@@ -67,11 +67,11 @@ function OverviewInner() {
     setLoading(true)
     setError(null)
     try {
-      if (projectProviderId) {
+      if (projectWorkingId) {
         // Prefer the richer engagement overview endpoint which returns project + brief in one call
-        const ov = await engagementOverview.get(projectProviderId)
+        const ov = await engagementOverview.get(projectWorkingId)
         setOverview(ov)
-        setProject(ov.project as unknown as ProjectResponse)
+        setProject(ov.projectShopOwner as unknown as ProjectResponse)
         setBrief(ov.brief ?? null)
       } else {
         const [proj, briefRes] = await Promise.all([
@@ -86,7 +86,7 @@ function OverviewInner() {
     } finally {
       setLoading(false)
     }
-  }, [projectId, projectProviderId])
+  }, [projectId, projectWorkingId])
 
   useEffect(() => { load() }, [load])
 
@@ -108,7 +108,7 @@ function OverviewInner() {
               setActiveAction(btn)
               const q = new URLSearchParams()
               if (projectId) q.set('projectId', String(projectId))
-              if (projectProviderId) q.set('projectProviderId', String(projectProviderId))
+              if (projectWorkingId) q.set('projectWorkingId', String(projectWorkingId))
               const suffix = q.toString() ? `?${q}` : ''
               if (btn === 'Brief') router.push(`/brief/full${suffix}`)
               else if (btn === 'Design Scope') router.push(`/design-management${suffix}`)

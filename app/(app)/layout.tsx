@@ -33,15 +33,15 @@ const navSections = [
   },
 ]
 
-// Carries projectId / projectProviderId from the current URL onto sidebar links
+// Carries projectId / projectWorkingId from the current URL onto sidebar links
 // so switching pages keeps the selected project context.
 function SidebarNav({ pathname }: { pathname: string }) {
   const searchParams = useSearchParams()
   const q = new URLSearchParams()
   const projectId = searchParams.get('projectId')
-  const projectProviderId = searchParams.get('projectProviderId')
+  const projectWorkingId = searchParams.get('projectWorkingId')
   if (projectId) q.set('projectId', projectId)
-  if (projectProviderId) q.set('projectProviderId', projectProviderId)
+  if (projectWorkingId) q.set('projectWorkingId', projectWorkingId)
   const suffix = q.toString() ? `?${q}` : ''
 
   return (

@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 // TODO: Wire to BE once a site-survey endpoint exists for providers.
 // All field data below is mock — replace with real API data when available.
-// Fields needed from BE (endpoint TBD, likely GET /api/site-surveys?projectProviderId=):
+// Fields needed from BE (endpoint TBD, likely GET /api/site-surveys?projectWorkingId=):
 //   Overview: surveyDate, surveyorName, version, purpose, briefSummary, ownerExpectations[]
 //   Size: totalFloorArea, groundFloor, 2ndFloor, 3rdFloor, ceilingHeights, frontageWidth, buildingDepth
 //   Structure: frameType, loadBearingWalls, staircase, mezzaninePossibility, renovationConstraint, facadeMaterial

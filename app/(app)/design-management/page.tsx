@@ -11,9 +11,9 @@ import {
 import CreateDesignDialog from './CreateDesignDialog'
 import ManageImagesDialog from './ManageImagesDialog'
 
-function getProjectProviderId(): number | null {
+function getProjectWorkingId(): number | null {
   if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem('projectProviderId')
+  const raw = localStorage.getItem('projectWorkingId')
   return raw ? Number(raw) : null
 }
 
@@ -41,8 +41,8 @@ export default function DesignManagementPage() {
 
 function DesignManagementInner() {
   const searchParams = useSearchParams()
-  const paramId = searchParams.get('projectProviderId')
-  const projectProviderId = paramId ? Number(paramId) : getProjectProviderId()
+  const paramId = searchParams.get('projectWorkingId')
+  const projectWorkingId = paramId ? Number(paramId) : getProjectWorkingId()
 
   const [items, setItems] = useState<DesignResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,18 +54,18 @@ function DesignManagementInner() {
   const [filterStatus, setFilterStatus] = useState<DesignStatus | 'all'>('all')
 
   const load = useCallback(async () => {
-    if (!projectProviderId) { setLoading(false); return }
+    if (!projectWorkingId) { setLoading(false); return }
     setLoading(true)
     setError(null)
     try {
-      const res = await designs.list({ projectProviderId })
+      const res = await designs.list({ projectWorkingId })
       setItems(res.items)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load')
     } finally {
       setLoading(false)
     }
-  }, [projectProviderId])
+  }, [projectWorkingId])
 
   useEffect(() => { load() }, [load])
 
@@ -111,7 +111,7 @@ function DesignManagementInner() {
             Create and manage design submissions for this engagement.
           </p>
         </div>
-        {projectProviderId && (
+        {projectWorkingId && (
           <button
             onClick={() => setShowCreate(true)}
             className="px-4 py-2.5 rounded-lg text-sm font-semibold text-white flex-shrink-0"
@@ -122,7 +122,7 @@ function DesignManagementInner() {
         )}
       </header>
 
-      {!projectProviderId ? (
+      {!projectWorkingId ? (
         <div className="flex flex-col items-center justify-center py-20 rounded-xl border" style={{ borderColor: '#d4c8be', backgroundColor: '#fdfbfa' }}>
           <div className="text-4xl mb-3">📐</div>
           <p className="font-medium mb-1" style={{ color: '#1c1008' }}>No engagement selected</p>
@@ -261,9 +261,9 @@ function DesignManagementInner() {
         </>
       )}
 
-      {showCreate && projectProviderId && (
+      {showCreate && projectWorkingId && (
         <CreateDesignDialog
-          projectProviderId={projectProviderId}
+          projectWorkingId={projectWorkingId}
           onClose={() => setShowCreate(false)}
           onCreated={() => { setShowCreate(false); load() }}
         />

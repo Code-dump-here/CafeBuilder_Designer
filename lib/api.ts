@@ -44,13 +44,13 @@ export const auth = {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface ProjectProviderResponse {
+export interface ProjectWorkingResponse {
   id: number
-  projectId: number
+  projectShopOwnerId: number
   projectName: string | null
-  providerId: number
+  serviceProviderProfileId: number
   providerDisplayName: string | null
-  applicationId: number | null
+  applyId: number | null
   contractType: string
   status: 'requested' | 'accepted' | 'rejected' | 'completed' | 'terminated'
   requestMessage: string | null
@@ -59,12 +59,12 @@ export interface ProjectProviderResponse {
   updatedAt: string
 }
 
-export interface ProjectApplicationResponse {
+export interface ApplyResponse {
   id: number
   postId: number
   postTitle: string | null
-  projectId: number | null
-  providerId: number
+  projectShopOwnerId: number | null
+  serviceProviderProfileId: number
   providerDisplayName: string | null
   proposal: string
   estimatedDurationDays: number | null
@@ -84,23 +84,30 @@ interface Paginated<T> {
   hasNext: boolean
 }
 
-// ── Project Providers (engagements) ──────────────────────────────────────────
+// ── Project Workings (engagements) ───────────────────────────────────────────
 
-export const projectProviders = {
-  list: (params: { providerId?: number; projectId?: number; status?: string } = {}) => {
+export const projectWorkings = {
+  list: (params: { serviceProviderProfileId?: number; projectShopOwnerId?: number; status?: string } = {}) => {
     const q = new URLSearchParams()
-    if (params.providerId) q.set('providerId', String(params.providerId))
-    if (params.projectId) q.set('projectId', String(params.projectId))
+    if (params.serviceProviderProfileId) q.set('serviceProviderProfileId', String(params.serviceProviderProfileId))
+    if (params.projectShopOwnerId) q.set('projectShopOwnerId', String(params.projectShopOwnerId))
     if (params.status) q.set('status', params.status)
     q.set('pageSize', '50')
-    return request<Paginated<ProjectProviderResponse>>(`/project-providers?${q}`)
+    return request<Paginated<ProjectWorkingResponse>>(`/project-workings?${q}`)
   },
 
+  get: (id: number) =>
+    request<ProjectWorkingResponse>(`/project-workings/${id}`),
+
+  /** Provider views the owner's brief for this engagement (open from 'requested'). */
+  getBrief: (id: number) =>
+    request<DesignBriefResponse>(`/project-workings/${id}/brief`),
+
   accept: (id: number) =>
-    request<ProjectProviderResponse>(`/project-providers/${id}/accept`, { method: 'POST' }),
+    request<ProjectWorkingResponse>(`/project-workings/${id}/accept`, { method: 'POST' }),
 
   reject: (id: number) =>
-    request<ProjectProviderResponse>(`/project-providers/${id}/reject`, { method: 'POST' }),
+    request<ProjectWorkingResponse>(`/project-workings/${id}/reject`, { method: 'POST' }),
 }
 
 // ── Projects ─────────────────────────────────────────────────────────────────
@@ -119,13 +126,13 @@ export interface ProjectResponse {
 
 export const projects = {
   get: (id: number) =>
-    request<ProjectResponse>(`/projects/${id}`),
+    request<ProjectResponse>(`/project-shop-owners/${id}`),
 
   list: (params: { ownerId?: number; pageSize?: number } = {}) => {
     const q = new URLSearchParams()
     if (params.ownerId) q.set('ownerId', String(params.ownerId))
     q.set('pageSize', String(params.pageSize ?? 50))
-    return request<Paginated<ProjectResponse>>(`/projects?${q}`)
+    return request<Paginated<ProjectResponse>>(`/project-shop-owners?${q}`)
   },
 }
 
@@ -149,7 +156,7 @@ export interface DesignBriefResponse {
 export const designBriefs = {
   list: (params: { projectId?: number; pageSize?: number } = {}) => {
     const q = new URLSearchParams()
-    if (params.projectId) q.set('projectId', String(params.projectId))
+    if (params.projectId) q.set('projectShopOwnerId', String(params.projectId))
     q.set('pageSize', String(params.pageSize ?? 10))
     return request<Paginated<DesignBriefResponse>>(`/design-briefs?${q}`)
   },
@@ -186,28 +193,31 @@ export const serviceProviders = {
     yearsExperience?: number
     portfolioHeadline?: string
   }) =>
-    request<ServiceProviderResponse>('/service-providers', {
+    request<ServiceProviderResponse>('/service-provider-profiles', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
   get: (id: number) =>
-    request<ServiceProviderResponse>(`/service-providers/${id}`),
+    request<ServiceProviderResponse>(`/service-provider-profiles/${id}`),
 }
 
 // ── Project Posts (public listings providers can apply to) ───────────────────
 
 export interface ProjectPostResponse {
   id: number
+  projectShopOwnerId: number
+  projectName: string | null
+  projectAddress: string | null
+  projectBudget: number | null
+  projectAreaM2: number | null
+  serviceKind: 'design' | 'construction' | 'both'
   title: string
-  description: string | null
-  location: string | null
-  area: number | null
-  budget: string | null
-  style: string | null
-  deadline: string | null
-  proposalCount: number | null
+  description: string
   status: string
+  submissionDeadline: string | null
+  isBoosted: boolean
+  boostedUntil: string | null
   createdAt: string
   updatedAt: string
 }
@@ -217,11 +227,11 @@ export const projectPosts = {
     const q = new URLSearchParams()
     if (params.status) q.set('status', params.status)
     q.set('pageSize', String(params.pageSize ?? 50))
-    return request<Paginated<ProjectPostResponse>>(`/project-posts?${q}`)
+    return request<Paginated<ProjectPostResponse>>(`/posts?${q}`)
   },
 
   get: (id: number) =>
-    request<ProjectPostResponse>(`/project-posts/${id}`),
+    request<ProjectPostResponse>(`/posts/${id}`),
 }
 
 // ── Designs ──────────────────────────────────────────────────────────────────
@@ -245,7 +255,7 @@ export interface DesignImageResponse extends DesignImage {
 
 export interface DesignResponse {
   id: number
-  projectProviderId: number
+  projectWorkingId: number
   title: string
   type: DesignType
   status: DesignStatus
@@ -256,15 +266,15 @@ export interface DesignResponse {
 }
 
 export const designs = {
-  list: (params: { projectProviderId?: number; status?: string } = {}) => {
+  list: (params: { projectWorkingId?: number; status?: string } = {}) => {
     const q = new URLSearchParams()
-    if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
+    if (params.projectWorkingId) q.set('projectWorkingId', String(params.projectWorkingId))
     if (params.status) q.set('status', params.status)
     q.set('pageSize', '100')
     return request<Paginated<DesignResponse>>(`/designs?${q}`)
   },
 
-  create: (body: { projectProviderId: number; title: string; type: DesignType }) =>
+  create: (body: { projectWorkingId: number; title: string; type: DesignType }) =>
     request<DesignResponse>('/designs', { method: 'POST', body: JSON.stringify(body) }),
 
   submit: (id: number) =>
@@ -338,7 +348,7 @@ export interface ReviewScoreResponse {
 
 export interface ReviewResponse {
   id: number
-  projectProviderId: number
+  projectWorkingId: number
   projectId: number | null
   providerId: number | null
   overallRating: number
@@ -356,9 +366,9 @@ export interface ProviderRatingSummaryResponse {
 }
 
 export const reviews = {
-  list: (params: { projectProviderId?: number; providerId?: number; pageSize?: number } = {}) => {
+  list: (params: { projectWorkingId?: number; providerId?: number; pageSize?: number } = {}) => {
     const q = new URLSearchParams()
-    if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
+    if (params.projectWorkingId) q.set('projectWorkingId', String(params.projectWorkingId))
     if (params.providerId) q.set('providerId', String(params.providerId))
     q.set('pageSize', String(params.pageSize ?? 20))
     return request<Paginated<ReviewResponse>>(`/reviews?${q}`)
@@ -371,10 +381,10 @@ export const reviews = {
 // ── Engagement Overview ────────────────────────────────────────────────────────
 
 export interface EngagementOverviewResponse {
-  projectProviderId: number
+  projectWorkingId: number
   contractType: string
   status: string
-  project: {
+  projectShopOwner: {
     id: number
     name: string
     address: string
@@ -388,8 +398,8 @@ export interface EngagementOverviewResponse {
 }
 
 export const engagementOverview = {
-  get: (projectProviderId: number) =>
-    request<EngagementOverviewResponse>(`/project-providers/${projectProviderId}/overview`),
+  get: (projectWorkingId: number) =>
+    request<EngagementOverviewResponse>(`/project-workings/${projectWorkingId}/overview`),
 }
 
 // ── Contracts (OTP-gated signing: drafted → pending_otp → confirmed) ──────────
@@ -398,7 +408,7 @@ export type ContractStatus = 'drafted' | 'pending_otp' | 'confirmed' | 'cancelle
 
 export interface ContractResponse {
   id: number
-  projectProviderId: number
+  projectWorkingId: number
   title: string
   partyInfo: string | null
   terms: string | null
@@ -413,9 +423,9 @@ export interface ContractResponse {
 }
 
 export const contracts = {
-  list: (params: { projectProviderId?: number; pageSize?: number } = {}) => {
+  list: (params: { projectWorkingId?: number; pageSize?: number } = {}) => {
     const q = new URLSearchParams()
-    if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
+    if (params.projectWorkingId) q.set('projectWorkingId', String(params.projectWorkingId))
     q.set('pageSize', String(params.pageSize ?? 20))
     return request<Paginated<ContractResponse>>(`/contracts?${q}`)
   },
@@ -424,7 +434,7 @@ export const contracts = {
     request<ContractResponse>(`/contracts/${id}`),
 
   /** Provider drafts a contract for an accepted engagement. */
-  create: (body: { projectProviderId: number; title: string; partyInfo?: string; terms?: string; agreedValue?: number; documentUrl?: string }) =>
+  create: (body: { projectWorkingId: number; title: string; partyInfo?: string; terms?: string; agreedValue?: number; documentUrl?: string }) =>
     request<ContractResponse>('/contracts', { method: 'POST', body: JSON.stringify(body) }),
 
   /** Only while status is 'drafted'. Null/omitted fields keep their value. */
@@ -478,24 +488,28 @@ export const notifications = {
     request<{ accountId: number; updated: number }>(`/notifications/mark-all-read?accountId=${accountId}`, { method: 'POST' }),
 }
 
-// ── Project Applications ──────────────────────────────────────────────────────
+// ── Applies (applications to posts) ───────────────────────────────────────────
 
-export const projectApplications = {
-  list: (params: { providerId?: number; postId?: number; status?: string } = {}) => {
+export const applies = {
+  list: (params: { serviceProviderProfileId?: number; postId?: number; status?: string } = {}) => {
     const q = new URLSearchParams()
-    if (params.providerId) q.set('providerId', String(params.providerId))
+    if (params.serviceProviderProfileId) q.set('serviceProviderProfileId', String(params.serviceProviderProfileId))
     if (params.postId) q.set('postId', String(params.postId))
     if (params.status) q.set('status', params.status)
     q.set('pageSize', '50')
-    return request<Paginated<ProjectApplicationResponse>>(`/project-applications?${q}`)
+    return request<Paginated<ApplyResponse>>(`/applies?${q}`)
   },
 
-  create: (body: { postId: number; providerId: number; proposal: string; estimatedDurationDays?: number }) =>
-    request<ProjectApplicationResponse>('/project-applications/apply', {
+  /** Provider profile is taken from the JWT — no id needed. Capability must match the post's serviceKind. */
+  create: (body: { postId: number; proposal: string; estimatedDurationDays?: number }) =>
+    request<ApplyResponse>('/applies/apply', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
+  updateProposal: (id: number, body: { proposal?: string; estimatedDurationDays?: number }) =>
+    request<ApplyResponse>(`/applies/${id}/proposal`, { method: 'PUT', body: JSON.stringify(body) }),
+
   withdraw: (id: number) =>
-    request<void>(`/project-applications/${id}/withdraw`, { method: 'DELETE' }),
+    request<void>(`/applies/${id}/withdraw`, { method: 'DELETE' }),
 }

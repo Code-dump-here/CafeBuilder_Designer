@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  projectProviders,
-  projectApplications,
+  projectWorkings,
+  applies,
   reviews,
-  type ProjectProviderResponse,
-  type ProjectApplicationResponse,
+  type ProjectWorkingResponse,
+  type ApplyResponse,
   type ProviderRatingSummaryResponse,
 } from '@/lib/api'
 
@@ -40,8 +40,8 @@ export default function MyProjectsPage() {
   const [avatarOpen, setAvatarOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>('all')
-  const [engagements, setEngagements] = useState<ProjectProviderResponse[]>([])
-  const [applications, setApplications] = useState<ProjectApplicationResponse[]>([])
+  const [engagements, setEngagements] = useState<ProjectWorkingResponse[]>([])
+  const [applications, setApplications] = useState<ApplyResponse[]>([])
   const [ratingSummary, setRatingSummary] = useState<ProviderRatingSummaryResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,8 +73,8 @@ export default function MyProjectsPage() {
     setError(null)
     try {
       const [engRes, appRes] = await Promise.all([
-        projectProviders.list({ providerId }),
-        projectApplications.list({ providerId }),
+        projectWorkings.list({ serviceProviderProfileId: providerId }),
+        applies.list({ serviceProviderProfileId: providerId }),
       ])
       setEngagements(engRes.items)
       setApplications(appRes.items)
@@ -105,14 +105,14 @@ export default function MyProjectsPage() {
 
   async function handleAccept(id: number) {
     setActionLoading(id)
-    try { await projectProviders.accept(id); await load() }
+    try { await projectWorkings.accept(id); await load() }
     catch (e: unknown) { alert(e instanceof Error ? e.message : 'Failed') }
     finally { setActionLoading(null) }
   }
 
   async function handleReject(id: number) {
     setActionLoading(id)
-    try { await projectProviders.reject(id); await load() }
+    try { await projectWorkings.reject(id); await load() }
     catch (e: unknown) { alert(e instanceof Error ? e.message : 'Failed') }
     finally { setActionLoading(null) }
   }
@@ -237,7 +237,7 @@ export default function MyProjectsPage() {
                 <div key={eng.id} className="flex items-center gap-4 px-4 py-3 border-b last:border-0" style={{ borderColor: '#d4c8be' }}>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: '#fef3c7' }}>📩</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: '#2d1e14' }}>{eng.projectName ?? `Project #${eng.projectId}`}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: '#2d1e14' }}>{eng.projectName ?? `Project #${eng.projectShopOwnerId}`}</p>
                     <p className="text-xs" style={{ color: '#5b483f' }}>Direct hire · {eng.contractType}</p>
                   </div>
                   <div className="flex gap-2">
@@ -338,7 +338,7 @@ export default function MyProjectsPage() {
                       <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center text-xl" style={{ backgroundColor: '#f0ebe5' }}>☕</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-sm truncate" style={{ color: '#2d1e14' }}>{eng.projectName ?? `Project #${eng.projectId}`}</span>
+                          <span className="font-semibold text-sm truncate" style={{ color: '#2d1e14' }}>{eng.projectName ?? `Project #${eng.projectShopOwnerId}`}</span>
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: s.bg, color: s.text }}>
                             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.dot }} />
                             {eng.status}
@@ -349,7 +349,7 @@ export default function MyProjectsPage() {
                         </p>
                       </div>
                       <Link
-                        href={`/overview?projectId=${eng.projectId}&projectProviderId=${eng.id}`}
+                        href={`/overview?projectId=${eng.projectShopOwnerId}&projectWorkingId=${eng.id}`}
                         className="px-4 py-1.5 rounded-lg border text-xs font-medium flex-shrink-0"
                         style={{ borderColor: '#d4c8be', color: '#2d1e14' }}
                       >

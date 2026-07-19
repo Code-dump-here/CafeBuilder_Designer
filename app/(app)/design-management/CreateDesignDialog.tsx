@@ -11,12 +11,12 @@ const DESIGN_TYPES: { value: DesignType; label: string }[] = [
 ]
 
 interface Props {
-  projectProviderId: number
+  projectWorkingId: number
   onClose: () => void
   onCreated: () => void
 }
 
-export default function CreateDesignDialog({ projectProviderId, onClose, onCreated }: Props) {
+export default function CreateDesignDialog({ projectWorkingId, onClose, onCreated }: Props) {
   const [title, setTitle] = useState('')
   const [type, setType] = useState<DesignType>('concept')
   const [loading, setLoading] = useState(false)
@@ -27,7 +27,7 @@ export default function CreateDesignDialog({ projectProviderId, onClose, onCreat
     setLoading(true)
     setError(null)
     try {
-      await designs.create({ projectProviderId, title: title.trim(), type })
+      await designs.create({ projectWorkingId, title: title.trim(), type })
       onCreated()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to create design')

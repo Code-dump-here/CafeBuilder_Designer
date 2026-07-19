@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   projectPosts,
-  projectApplications,
+  applies,
   type ProjectPostResponse,
 } from '@/lib/api'
 
@@ -14,12 +14,6 @@ import {
 // - area (m² of space)
 // - proposalCount (number of proposals already submitted)
 // These fields are in ProjectPostResponse but may not be populated yet by the BE.
-
-function getProviderId(): number | null {
-  if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem('accountId')
-  return raw ? Number(raw) : null
-}
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   open:   { bg: '#d1fae5', color: '#065f46' },
@@ -52,7 +46,7 @@ export default function BrowsePage() {
 
   const filtered = posts.filter((p) =>
     p.title.toLowerCase().includes(search.toLowerCase()) ||
-    (p.location ?? '').toLowerCase().includes(search.toLowerCase())
+    (p.projectAddress ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -116,13 +110,13 @@ export default function BrowsePage() {
                         {p.status}
                       </span>
                     </div>
-                    {p.location && <p className="text-sm mb-2" style={{ color: '#7a6a5a' }}>{p.location}</p>}
+                    {p.projectAddress && <p className="text-sm mb-2" style={{ color: '#7a6a5a' }}>{p.projectAddress}</p>}
                     {p.description && <p className="text-sm line-clamp-2 mb-3" style={{ color: '#7a6a5a' }}>{p.description}</p>}
                     <div className="flex flex-wrap gap-4 text-xs" style={{ color: '#a89888' }}>
-                      {p.area != null && <span>Area: {p.area} m²</span>}
-                      {p.budget && <span>Budget: {p.budget}</span>}
-                      {p.deadline && <span>Deadline: {new Date(p.deadline).toLocaleDateString()}</span>}
-                      {p.proposalCount != null && <span>{p.proposalCount} proposal{p.proposalCount !== 1 ? 's' : ''}</span>}
+                      {p.projectAreaM2 != null && <span>Area: {p.projectAreaM2} m²</span>}
+                      {p.projectBudget && <span>Budget: {p.projectBudget}</span>}
+                      {p.submissionDeadline && <span>Deadline: {new Date(p.submissionDeadline).toLocaleDateString()}</span>}
+                      <span className="capitalize">Hiring: {p.serviceKind}</span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
@@ -174,15 +168,13 @@ function ApplyDialog({ post, onClose, onApplied }: { post: ProjectPostResponse; 
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit() {
-    const providerId = typeof window !== 'undefined' ? Number(localStorage.getItem('accountId')) : null
-    if (!providerId) { setError('Not logged in'); return }
     if (!proposal.trim()) { setError('Proposal is required'); return }
     setLoading(true)
     setError(null)
     try {
-      await projectApplications.create({
+      // Provider profile is resolved from the JWT on the BE side
+      await applies.create({
         postId: post.id,
-        providerId,
         proposal: proposal.trim(),
         estimatedDurationDays: days ? Number(days) : undefined,
       })
@@ -253,12 +245,12 @@ function ApplyDialog({ post, onClose, onApplied }: { post: ProjectPostResponse; 
 function BriefDialog({ post, onClose, onApply }: { post: ProjectPostResponse; onClose: () => void; onApply: () => void }) {
   const s = STATUS_STYLE[post.status?.toLowerCase()] ?? STATUS_STYLE.open
   const rows: { label: string; value: string }[] = [
-    { label: 'Location', value: post.location ?? '—' },
-    { label: 'Area', value: post.area != null ? `${post.area} m²` : '—' },
-    { label: 'Budget', value: post.budget ?? '—' },
-    { label: 'Style', value: post.style ?? '—' },
-    { label: 'Deadline', value: post.deadline ? new Date(post.deadline).toLocaleDateString() : '—' },
-    { label: 'Proposals', value: post.proposalCount != null ? String(post.proposalCount) : '—' },
+    { label: 'Project', value: post.projectName ?? '—' },
+    { label: 'Location', value: post.projectAddress ?? '—' },
+    { label: 'Area', value: post.projectAreaM2 != null ? `${post.projectAreaM2} m²` : '—' },
+    { label: 'Budget', value: post.projectBudget != null ? `${post.projectBudget.toLocaleString()} VND` : '—' },
+    { label: 'Hiring for', value: post.serviceKind },
+    { label: 'Deadline', value: post.submissionDeadline ? new Date(post.submissionDeadline).toLocaleDateString() : '—' },
     { label: 'Posted', value: new Date(post.createdAt).toLocaleDateString() },
   ]
 
