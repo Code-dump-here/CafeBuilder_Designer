@@ -385,6 +385,92 @@ export const engagementOverview = {
       .then(r => r.data),
 }
 
+// ── Contracts (OTP-gated signing: drafted → pending_otp → confirmed) ──────────
+
+export type ContractStatus = 'drafted' | 'pending_otp' | 'confirmed' | 'cancelled'
+
+export interface ContractResponse {
+  id: number
+  projectProviderId: number
+  title: string
+  partyInfo: string | null
+  terms: string | null
+  agreedValue: number | null
+  documentUrl: string | null
+  otpExpiresAt: string | null
+  confirmedAt: string | null
+  confirmedBy: number | null
+  status: ContractStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export const contracts = {
+  list: (params: { projectProviderId?: number; pageSize?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectProviderId) q.set('projectProviderId', String(params.projectProviderId))
+    q.set('pageSize', String(params.pageSize ?? 20))
+    return request<Paginated<ContractResponse>>(`/contracts?${q}`)
+  },
+
+  get: (id: number) =>
+    request<ContractResponse>(`/contracts/${id}`),
+
+  /** Provider drafts a contract for an accepted engagement. */
+  create: (body: { projectProviderId: number; title: string; partyInfo?: string; terms?: string; agreedValue?: number; documentUrl?: string }) =>
+    request<ContractResponse>('/contracts', { method: 'POST', body: JSON.stringify(body) }),
+
+  /** Only while status is 'drafted'. Null/omitted fields keep their value. */
+  update: (id: number, body: { title?: string; partyInfo?: string; terms?: string; agreedValue?: number; documentUrl?: string }) =>
+    request<ContractResponse>(`/contracts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  /** Emails a signing OTP to the owner (drafted → pending_otp). */
+  sendOtp: (id: number) =>
+    request<ContractResponse>(`/contracts/${id}/send-otp`, { method: 'POST' }),
+
+  /** Owner confirms the OTP (pending_otp → confirmed). Confirmed unlocks designs/construction. */
+  confirmOtp: (id: number, otpCode: string, confirmedBy: number) =>
+    request<ContractResponse>(`/contracts/${id}/confirm-otp`, { method: 'POST', body: JSON.stringify({ otpCode, confirmedBy }) }),
+
+  /** Only before confirmation (drafted/pending_otp → cancelled). */
+  cancel: (id: number) =>
+    request<ContractResponse>(`/contracts/${id}/cancel`, { method: 'POST' }),
+}
+
+// ── Notifications (in-app + email) ────────────────────────────────────────────
+
+export interface NotificationResponse {
+  id: number
+  accountId: number
+  type: string
+  title: string
+  content: string
+  referenceType: string | null
+  referenceId: number | null
+  isRead: boolean
+  emailSentAt: string | null
+  createdAt: string
+}
+
+export const notifications = {
+  list: (params: { accountId: number; isRead?: boolean; pageSize?: number }) => {
+    const q = new URLSearchParams()
+    q.set('accountId', String(params.accountId))
+    if (params.isRead !== undefined) q.set('isRead', String(params.isRead))
+    q.set('pageSize', String(params.pageSize ?? 20))
+    return request<Paginated<NotificationResponse>>(`/notifications?${q}`)
+  },
+
+  unreadCount: (accountId: number) =>
+    request<{ accountId: number; unreadCount: number }>(`/notifications/unread-count?accountId=${accountId}`),
+
+  markRead: (id: number) =>
+    request<NotificationResponse>(`/notifications/${id}/read`, { method: 'PATCH' }),
+
+  markAllRead: (accountId: number) =>
+    request<{ accountId: number; updated: number }>(`/notifications/mark-all-read?accountId=${accountId}`, { method: 'POST' }),
+}
+
 // ── Project Applications ──────────────────────────────────────────────────────
 
 export const projectApplications = {
