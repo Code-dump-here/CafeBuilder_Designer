@@ -528,3 +528,166 @@ export const applies = {
   withdraw: (id: number) =>
     request<void>(`/applies/${id}/withdraw`, { method: 'DELETE' }),
 }
+
+// ── Surveys (pre-contract site survey) ────────────────────────────────────────
+
+export interface SurveyResponse {
+  id: number
+  projectWorkingId: number
+  version: number
+  conditionNote: string
+  reportUrl: string | null
+  createdBy: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export const surveys = {
+  list: (params: { projectWorkingId?: number; pageSize?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectWorkingId) q.set('projectWorkingId', String(params.projectWorkingId))
+    q.set('pageSize', String(params.pageSize ?? 50))
+    return request<Paginated<SurveyResponse>>(`/surveys?${q}`)
+  },
+
+  get: (id: number) => request<SurveyResponse>(`/surveys/${id}`),
+
+  /** Requires engagement 'accepted' + design contractType. Does NOT need a confirmed contract. */
+  create: (body: { projectWorkingId: number; conditionNote: string; reportUrl?: string; createdBy?: number }) =>
+    request<SurveyResponse>('/surveys', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: number, body: { conditionNote?: string; reportUrl?: string }) =>
+    request<SurveyResponse>(`/surveys/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+}
+
+// ── Construction (milestones + tasks) ─────────────────────────────────────────
+
+export type ProgressStatus = 'pending' | 'in_progress' | 'completed'
+
+export interface ConstructionItemResponse {
+  id: number
+  projectWorkingId: number
+  parentId: number | null
+  name: string
+  description: string | null
+  category: string | null
+  estimateAt: string | null
+  actualAt: string | null
+  status: ProgressStatus
+  createdBy: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ConstructionTaskResponse {
+  id: number
+  constructionItemId: number
+  name: string
+  description: string | null
+  imageUrl: string | null
+  estimateAt: string | null
+  actualAt: string | null
+  reason: string | null
+  status: ProgressStatus
+  createdBy: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export const constructionItems = {
+  list: (params: { projectWorkingId?: number; parentId?: number; status?: string } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectWorkingId) q.set('projectWorkingId', String(params.projectWorkingId))
+    if (params.parentId) q.set('parentId', String(params.parentId))
+    if (params.status) q.set('status', params.status)
+    q.set('pageSize', '100')
+    return request<Paginated<ConstructionItemResponse>>(`/construction-items?${q}`)
+  },
+
+  create: (body: { projectWorkingId: number; parentId?: number; name: string; description?: string; category?: string; estimateAt?: string; createdBy?: number }) =>
+    request<ConstructionItemResponse>('/construction-items', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: number, body: { name?: string; description?: string; category?: string; estimateAt?: string }) =>
+    request<ConstructionItemResponse>(`/construction-items/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  /** Sequential only: pending → in_progress → completed. */
+  setStatus: (id: number, status: ProgressStatus) =>
+    request<ConstructionItemResponse>(`/construction-items/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  remove: (id: number) => request<void>(`/construction-items/${id}`, { method: 'DELETE' }),
+}
+
+export const constructionTasks = {
+  list: (params: { constructionItemId?: number; status?: string } = {}) => {
+    const q = new URLSearchParams()
+    if (params.constructionItemId) q.set('constructionItemId', String(params.constructionItemId))
+    if (params.status) q.set('status', params.status)
+    q.set('pageSize', '100')
+    return request<Paginated<ConstructionTaskResponse>>(`/construction-tasks?${q}`)
+  },
+
+  create: (body: { constructionItemId: number; name: string; description?: string; imageUrl?: string; estimateAt?: string; createdBy?: number }) =>
+    request<ConstructionTaskResponse>('/construction-tasks', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: number, body: { name?: string; description?: string; imageUrl?: string; estimateAt?: string; reason?: string }) =>
+    request<ConstructionTaskResponse>(`/construction-tasks/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  setStatus: (id: number, status: ProgressStatus) =>
+    request<ConstructionTaskResponse>(`/construction-tasks/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  remove: (id: number) => request<void>(`/construction-tasks/${id}`, { method: 'DELETE' }),
+}
+
+// ── Issues ────────────────────────────────────────────────────────────────────
+
+export interface IssueTypeResponse {
+  id: number
+  code: string
+  name: string
+}
+
+export interface IssueResponse {
+  id: number
+  projectWorkingId: number
+  constructionItemId: number | null
+  issueTypeId: number
+  issueTypeName: string | null
+  cause: string | null
+  reason: string | null
+  solution: string | null
+  issueImage: string | null
+  confirmImage: string | null
+  estimateAt: string | null
+  actualAt: string | null
+  status: ProgressStatus
+  createdBy: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export const issueTypes = {
+  /** Catalog — not paginated. */
+  list: () => request<IssueTypeResponse[]>('/issue-types'),
+}
+
+export const issues = {
+  list: (params: { projectWorkingId?: number; constructionItemId?: number; status?: string } = {}) => {
+    const q = new URLSearchParams()
+    if (params.projectWorkingId) q.set('projectWorkingId', String(params.projectWorkingId))
+    if (params.constructionItemId) q.set('constructionItemId', String(params.constructionItemId))
+    if (params.status) q.set('status', params.status)
+    q.set('pageSize', '100')
+    return request<Paginated<IssueResponse>>(`/issues?${q}`)
+  },
+
+  create: (body: { projectWorkingId: number; constructionItemId?: number; issueTypeId: number; cause?: string; reason?: string; solution?: string; issueImage?: string; estimateAt?: string; createdBy?: number }) =>
+    request<IssueResponse>('/issues', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: number, body: { issueTypeId?: number; cause?: string; reason?: string; solution?: string; issueImage?: string; confirmImage?: string; estimateAt?: string }) =>
+    request<IssueResponse>(`/issues/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  setStatus: (id: number, status: ProgressStatus) =>
+    request<IssueResponse>(`/issues/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  remove: (id: number) => request<void>(`/issues/${id}`, { method: 'DELETE' }),
+}

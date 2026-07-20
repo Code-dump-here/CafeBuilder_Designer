@@ -24,6 +24,13 @@ const navSections = [
     ],
   },
   {
+    label: 'Construction',
+    items: [
+      { href: '/construction', label: 'Milestones' },
+      { href: '/issues', label: 'Issues' },
+    ],
+  },
+  {
     label: 'Collaboration',
     items: [
       { href: '/browse', label: 'Browse Projects' },
