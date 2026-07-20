@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import TopNav from '../TopNav'
 import {
   projectWorkings,
   applies,
@@ -36,9 +36,6 @@ const TABS: { key: Tab; label: string }[] = [
 ]
 
 export default function MyProjectsPage() {
-  const router = useRouter()
-  const [avatarOpen, setAvatarOpen] = useState(false)
-  const avatarRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>('all')
   const [engagements, setEngagements] = useState<ProjectWorkingResponse[]>([])
   const [applications, setApplications] = useState<ApplyResponse[]>([])
@@ -49,23 +46,6 @@ export default function MyProjectsPage() {
   const [search, setSearch] = useState('')
 
   const providerId = getProviderId()
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
-        setAvatarOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  function handleLogout() {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('accountId')
-    router.push('/sign-in')
-  }
 
   const load = useCallback(async () => {
     if (!providerId) { setLoading(false); return }
@@ -128,44 +108,8 @@ export default function MyProjectsPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#fbfaf9' }}>
-      {/* Nav */}
-      <header className="h-16 border-b flex items-center" style={{ borderColor: '#d4c8be', backgroundColor: '#fbfaf9' }}>
-        <div className="w-full px-8" style={{ maxWidth: '1904px', margin: '0 auto' }}>
-          <div className="flex items-center justify-between h-full">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#1c1008] flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 2C6.13 2 3 5.13 3 9c0 2.8 1.6 5.23 3.94 6.46L6 18h8l-.94-2.54C15.4 14.23 17 11.8 17 9c0-3.87-3.13-7-7-7z" fill="#fffbeb" opacity="0.9"/>
-                </svg>
-              </div>
-              <span className="font-semibold text-sm" style={{ color: '#1c1008' }}>SmartCafeBuilder</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <Link href="/my-projects" style={{ color: '#1c1008' }}>My Projects</Link>
-              <Link href="/browse" style={{ color: '#5b483f' }}>Browse</Link>
-            </nav>
-            <div className="flex items-center gap-3 relative" ref={avatarRef}>
-              <button
-                onClick={() => setAvatarOpen(o => !o)}
-                className="w-8 h-8 rounded-full bg-[#e8ddd6] flex items-center justify-center focus:outline-none"
-              >
-                <span className="text-xs font-semibold" style={{ color: '#1c1008' }}>JD</span>
-              </button>
-              {avatarOpen && (
-                <div className="absolute right-0 top-10 w-40 rounded-xl shadow-lg border z-50 overflow-hidden" style={{ backgroundColor: '#fbfaf9', borderColor: '#d4c8be' }}>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 text-sm hover:bg-[#f5ede6] transition-colors"
-                    style={{ color: '#991b1b' }}
-                  >
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Shared nav */}
+      <TopNav />
 
       {/* Main */}
       <main className="flex-1 px-8 py-8 mx-auto w-full" style={{ maxWidth: '1904px' }}>

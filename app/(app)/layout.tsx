@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
+import TopNav from '../TopNav'
 
 const navSections = [
   {
@@ -81,58 +82,41 @@ function SidebarNav({ pathname }: { pathname: string }) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
-
-  function handleLogout() {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('accountId')
-    router.push('/sign-in')
-  }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f5ede6' }}>
-      {/* Sidebar */}
-      <aside className="w-[300px] flex-shrink-0 flex flex-col h-full overflow-y-auto">
-        {/* Logo */}
-        <div className="flex items-center gap-2 px-6 h-20">
-          <div className="w-7 h-7 rounded-full bg-[#1c1008] flex items-center justify-center">
-            <span className="text-white text-xs font-bold">D</span>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: '#fbfaf9' }}>
+      {/* Same top navbar as My Projects */}
+      <TopNav />
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-[260px] flex-shrink-0 flex flex-col h-full overflow-y-auto border-r" style={{ borderColor: '#d4c8be' }}>
+          {/* Back to My Projects */}
+          <div className="px-4 pt-5 pb-1">
+            <Link
+              href="/my-projects"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-opacity hover:opacity-70"
+              style={{ color: '#5b483f' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              Back to My Projects
+            </Link>
           </div>
-          <Link href="/my-projects" className="font-semibold text-sm hover:underline" style={{ color: '#1c1008' }}>Designer</Link>
-        </div>
 
-        {/* Nav */}
-        <Suspense>
-          <SidebarNav pathname={pathname} />
-        </Suspense>
+          {/* Nav */}
+          <Suspense>
+            <SidebarNav pathname={pathname} />
+          </Suspense>
+        </aside>
 
-        {/* Bottom action */}
-        <div className="px-4 pb-6">
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
-            style={{ color: '#a89888' }}
-            onClick={handleLogout}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main panel */}
-      <main className="flex-1 overflow-y-auto p-4">
-        <div
-          className="min-h-full rounded-2xl shadow-sm"
-          style={{ backgroundColor: '#fbfaf9' }}
-        >
+        {/* Main panel */}
+        <main className="flex-1 overflow-y-auto">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

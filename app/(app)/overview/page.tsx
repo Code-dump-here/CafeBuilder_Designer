@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { engagementOverview, projects, designBriefs, type ProjectResponse, type DesignBriefResponse, type EngagementOverviewResponse } from '@/lib/api'
@@ -94,7 +95,7 @@ function OverviewInner() {
     <div className="p-8 max-w-[1400px]">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs mb-5" style={{ color: '#5b483f' }}>
-        <span className="hover:underline cursor-pointer">Projects</span>
+        <Link href="/my-projects" className="hover:underline">My Projects</Link>
         <span>/</span>
         <span className="font-medium" style={{ color: '#2d1e14' }}>{project?.name ?? 'Project Detail'}</span>
       </nav>
