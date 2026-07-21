@@ -43,11 +43,6 @@ const projectSections = [
   },
 ]
 
-// Pages that work the same regardless of which project (or no project) you're in.
-const globalItems = [
-  { href: '/browse', label: 'Browse Projects' },
-]
-
 /** Shows which engagement the sidebar's project pages currently point at. */
 function ProjectContextBanner({ projectId, projectWorkingId }: { projectId: number | null; projectWorkingId: string | null }) {
   const [project, setProject] = useState<ProjectResponse | null>(null)
@@ -136,31 +131,6 @@ function SidebarNav({ pathname }: { pathname: string }) {
             </ul>
           </div>
         ))}
-
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2" style={{ color: '#a89888' }}>
-            General
-          </p>
-          <ul className="flex flex-col gap-0.5">
-            {globalItems.map((item) => {
-              const active = pathname === item.href
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: active ? '#1c1008' : 'transparent',
-                      color: active ? '#fff' : '#5c4a38',
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
       </div>
     </nav>
   )
